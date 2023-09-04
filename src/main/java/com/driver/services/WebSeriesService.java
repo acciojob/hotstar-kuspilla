@@ -8,6 +8,8 @@ import com.driver.repository.WebSeriesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class WebSeriesService {
 
@@ -24,21 +26,33 @@ public class WebSeriesService {
         //use function written in Repository Layer for the same
         //Dont forget to save the production and webseries Repo
 
-        for(WebSeries temp : webSeriesRepository.findAll()) {
-            if (temp.getSeriesName().equals(webSeriesEntryDto.getSeriesName())) {
-                throw new Exception("Series is already present");
-            }
-        }
-
         WebSeries webSeries = new WebSeries();
         webSeries.setSeriesName( webSeriesEntryDto.getSeriesName());
         webSeries.setAgeLimit(webSeriesEntryDto.getAgeLimit());
         webSeries.setRating(webSeriesEntryDto.getRating());
         webSeries.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
+        webSeries.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
+
+        WebSeries checkIsPresent = webSeriesRepository.findBySeriesName(webSeriesEntryDto.getSeriesName());
+        if( checkIsPresent != null){
+            throw new Exception("Series is already present");  // exception throw
+        }
+
         Integer productionHouseId = webSeriesEntryDto.getProductionHouseId();
         ProductionHouse productionHouse = productionHouseRepository.findById(productionHouseId).get();
+        if( productionHouse == null) return null;
+
         webSeries.setProductionHouse(productionHouse);
         webSeries = webSeriesRepository.save(webSeries);
+        List<WebSeries> webSeriesList = productionHouse.getWebSeriesList();
+        double productionHouseRating = 0;
+        for( WebSeries temp : webSeriesList){
+            productionHouseRating += temp.getRating();
+        }
+        productionHouseRating = productionHouseRating / webSeriesList.size();
+        productionHouse.setRatings(productionHouseRating);
+        productionHouseRepository.save(productionHouse);
+
         Integer id = webSeries.getId();
 
         return id;

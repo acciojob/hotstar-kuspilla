@@ -22,7 +22,7 @@ public class ProductionHouseService {
         ProductionHouse productionHouse = new ProductionHouse();
         String name =   productionHouseEntryDto.getName();
         productionHouse.setName(name);
-        productionHouse.setRatings(4.5);
+        productionHouse.setRatings(0);
         productionHouse.setWebSeriesList(new ArrayList<>());
         productionHouse = productionHouseRepository.save(productionHouse);
         Integer id = productionHouse.getId();
