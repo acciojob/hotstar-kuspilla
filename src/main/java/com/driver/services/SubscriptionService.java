@@ -29,7 +29,6 @@ public class SubscriptionService {
         Subscription subscription = new Subscription();
         Integer userId = subscriptionEntryDto.getUserId();
         User user = userRepository.findById(userId).get();
-        if( user == null) return null;
 
         subscription.setSubscriptionType( subscriptionEntryDto.getSubscriptionType());
         Integer numberOfScreen = subscriptionEntryDto.getNoOfScreensRequired();
@@ -48,13 +47,14 @@ public class SubscriptionService {
 
         }
 
-        subscription.setStartSubscriptionDate(new Date());
         subscription.setTotalAmountPaid(paidAmount);
         user.setSubscription(subscription);
         subscription.setUser(user);
-        userRepository.save(user);
+        Date date = new Date();
+        subscription.setStartSubscriptionDate(date);
+        user.setSubscription(subscription);
 
-        return paidAmount;
+        return subscription.getTotalAmountPaid();
     }
 
     public Integer upgradeSubscription(Integer userId)throws Exception{

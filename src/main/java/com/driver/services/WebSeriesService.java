@@ -31,7 +31,6 @@ public class WebSeriesService {
         webSeries.setAgeLimit(webSeriesEntryDto.getAgeLimit());
         webSeries.setRating(webSeriesEntryDto.getRating());
         webSeries.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
-        webSeries.setSubscriptionType(webSeriesEntryDto.getSubscriptionType());
 
         WebSeries checkIsPresent = webSeriesRepository.findBySeriesName(webSeriesEntryDto.getSeriesName());
         if( checkIsPresent != null){
@@ -40,11 +39,12 @@ public class WebSeriesService {
 
         Integer productionHouseId = webSeriesEntryDto.getProductionHouseId();
         ProductionHouse productionHouse = productionHouseRepository.findById(productionHouseId).get();
-        if( productionHouse == null) return null;
+        if( productionHouse == null) throw new Exception("Production house is not present");
 
         webSeries.setProductionHouse(productionHouse);
         webSeries = webSeriesRepository.save(webSeries);
         List<WebSeries> webSeriesList = productionHouse.getWebSeriesList();
+        webSeriesList.add(webSeries);
         double productionHouseRating = 0;
         for( WebSeries temp : webSeriesList){
             productionHouseRating += temp.getRating();
