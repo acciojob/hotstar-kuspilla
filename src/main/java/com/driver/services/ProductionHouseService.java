@@ -19,14 +19,10 @@ public class ProductionHouseService {
 
     public Integer addProductionHouseToDb(ProductionHouseEntryDto productionHouseEntryDto){
 
-        ProductionHouse productionHouse = new ProductionHouse();
-        String name =   productionHouseEntryDto.getName();
-        productionHouse.setName(name);
+        ProductionHouse productionHouse = new ProductionHouse(productionHouseEntryDto.getName());
         productionHouse.setRatings(0);
-        productionHouse = productionHouseRepository.save(productionHouse);
-        Integer id = productionHouse.getId();
-
-        return  id;
+        ProductionHouse savedProductionHouse = productionHouseRepository.save(productionHouse);
+        return  savedProductionHouse.getId();
     }
 
 

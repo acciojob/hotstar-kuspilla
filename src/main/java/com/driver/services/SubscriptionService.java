@@ -9,7 +9,6 @@ import com.driver.repository.SubscriptionRepository;
 import com.driver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.function.SupplierUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -26,79 +25,72 @@ public class SubscriptionService {
     public Integer buySubscription(SubscriptionEntryDto subscriptionEntryDto){
 
         //Save The subscription Object into the Db and return the total Amount that user has to pay
+        //Save The subscription Object into the Db and return the total Amount that user has to pay
+        User user = userRepository.findById(subscriptionEntryDto.getUserId()).get();
+
         Subscription subscription = new Subscription();
-        Integer userId = subscriptionEntryDto.getUserId();
-        User user = userRepository.findById(userId).get();
-
-        subscription.setSubscriptionType( subscriptionEntryDto.getSubscriptionType());
-        Integer numberOfScreen = subscriptionEntryDto.getNoOfScreensRequired();
         subscription.setSubscriptionType(subscriptionEntryDto.getSubscriptionType());
+        subscription.setNoOfScreensSubscribed(subscriptionEntryDto.getNoOfScreensRequired());
+        SubscriptionType subscriptionType = subscription.getSubscriptionType();
+        int noOfScreen = subscription.getNoOfScreensSubscribed();
 
-        Integer paidAmount = 0;
-        if( subscription.getSubscriptionType().equals(SubscriptionType.BASIC)){
-            paidAmount = 500 + (200 * numberOfScreen);
+        int priceOdSubscription = 0;
+
+        if(subscriptionType.equals(SubscriptionType.BASIC)){
+            priceOdSubscription = 500 + (200 * noOfScreen);
+        }else if(subscriptionType.equals(SubscriptionType.PRO)){
+            priceOdSubscription = 800 + (250 * noOfScreen);
+        }else{
+            priceOdSubscription = 1000 + (350 * noOfScreen);
         }
-        else if( subscription.getSubscriptionType().equals(SubscriptionType.ELITE)){
-            paidAmount = 1000 + ( 350 * numberOfScreen);
-
-        }
-        else if( subscription.getSubscriptionType().equals(SubscriptionType.PRO)){
-            paidAmount = 800 + ( 250 * numberOfScreen );
-
-        }
-
-        subscription.setTotalAmountPaid(paidAmount);
-        user.setSubscription(subscription);
+        subscription.setTotalAmountPaid(priceOdSubscription);
         subscription.setUser(user);
         Date date = new Date();
         subscription.setStartSubscriptionDate(date);
+
         user.setSubscription(subscription);
 
         return subscription.getTotalAmountPaid();
     }
-
     public Integer upgradeSubscription(Integer userId)throws Exception{
 
         //If you are already at an ElITE subscription : then throw Exception ("Already the best Subscription")
         //In all other cases just try to upgrade the subscription and tell the difference of price that user has to pay
         //update the subscription in the repository
-       User user = userRepository.findById(userId).get();
-
-       Subscription subscription = user.getSubscription();
-        if( subscription.toString().equals("ELITE") ){
+        User user=userRepository.findById(userId).get();
+        if(user.getSubscription().getSubscriptionType().toString().equals("ELITE")){
             throw new Exception("Already the best Subscription");
         }
 
-       Integer lastPayment = subscription.getTotalAmountPaid();
-        Integer paidAmount;
-        if( subscription.getSubscriptionType().equals(SubscriptionType.BASIC)){
+        Subscription subscription=user.getSubscription();
+        Integer previousFair=subscription.getTotalAmountPaid();
+        Integer currentFair;
+        if(subscription.getSubscriptionType().equals(SubscriptionType.BASIC)){
             subscription.setSubscriptionType(SubscriptionType.PRO);
-            paidAmount = lastPayment + 300 + (50 * subscription.getNoOfScreensSubscribed() );
-
-        }
-        else {
+            currentFair =previousFair+300+(50*subscription.getNoOfScreensSubscribed());
+        }else {
             subscription.setSubscriptionType(SubscriptionType.ELITE);
-            paidAmount = lastPayment + 200 + (100 * subscription.getNoOfScreensSubscribed() );
+            currentFair=previousFair+200+(100*subscription.getNoOfScreensSubscribed());
         }
 
-       subscription.setTotalAmountPaid(paidAmount);
-       user.setSubscription(subscription);
-       subscriptionRepository.save(subscription);
+        subscription.setTotalAmountPaid(currentFair);
+        user.setSubscription(subscription);
+        subscriptionRepository.save(subscription);
 
-        return paidAmount - lastPayment;
+        return currentFair-previousFair;
     }
 
     public Integer calculateTotalRevenueOfHotstar(){
 
         //We need to find out total Revenue of hotstar : from all the subscriptions combined
         //Hint is to use findAll function from the SubscriptionDb
-       Integer revenue = 0;
-       List<Subscription> subscriptionList = subscriptionRepository.findAll();
-       for( Subscription temp : subscriptionList){
-           revenue += temp.getTotalAmountPaid();
-       }
+        List<Subscription> subscriptionList = subscriptionRepository.findAll();
 
-        return revenue;
+        Integer totalRevenue = 0;
+        for(Subscription subscription : subscriptionList){
+            totalRevenue += subscription.getTotalAmountPaid();
+        }
+        return totalRevenue;
     }
 
 }
